@@ -4,3 +4,4 @@ numpy
 tensorflow
 pillow
 opencv-python-headless
+gunicorn

@@ -8,7 +8,7 @@ import io
 import os
 
 app = Flask(__name__)
-CORS(app, resources={r"/predict": {"origins": "*"}})
+CORS(app)
 
 # Define the custom layer
 class Cast(tf.keras.layers.Layer):
@@ -76,5 +76,5 @@ def predict():
     })
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 7000))  # Default port is 5000, can be overridden by env
+    port = int(os.environ.get('PORT', 5000))  # Default port is 5000, can be overridden by env
     app.run(host='0.0.0.0', port=port)
