@@ -1,101 +1,171 @@
-import Image from "next/image";
+'use client'
+import React, { useState, useRef, useCallback, useEffect } from 'react';
+import Webcam from 'react-webcam';
+import axios from 'axios';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+
+interface Prediction {
+  emotion: string;
+  confidence: number;
+  face: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  };
+}
+
+const emotionColors = {
+  Happy: 'bg-green-500',
+  Sad: 'bg-blue-500',
+  Neutral: 'bg-gray-500',
+  Angry: 'bg-red-500',
+  Surprised: 'bg-yellow-500',
+  // Add more colors for other emotions as needed
+};
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const webcamRef = useRef<Webcam>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [prediction, setPrediction] = useState<Prediction | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  const capture = useCallback(async () => {
+    const imageSrc = webcamRef.current?.getScreenshot();
+    if (imageSrc) {
+      const base64Data = imageSrc.split(',')[1];
+      const blob = await fetch(`data:image/jpeg;base64,${base64Data}`).then(res => res.blob());
+
+      const formData = new FormData();
+      formData.append('image', blob, 'webcam.jpg');
+
+      try {
+        const response = await axios.post('http://127.0.0.1:5000/predict', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        
+        if ('error' in response.data) {
+          setError(response.data.error);
+          setPrediction(null);
+        } else {
+          setPrediction(response.data);
+          setError(null);
+        }
+      } catch (error) {
+        if (axios.isAxiosError(error)) {
+          console.error('Axios error:', error.message);
+          setError(`Network error: ${error.message}`);
+        } else {
+          console.error('Unexpected error:', error);
+          setError('An unexpected error occurred.');
+        }
+        setPrediction(null);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      capture();
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [capture]);
+
+  useEffect(() => {
+    if (prediction && canvasRef.current && webcamRef.current) {
+      const ctx = canvasRef.current.getContext('2d');
+      if (ctx) {
+        ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+        ctx.strokeStyle = '#10B981';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(
+          prediction.face.x,
+          prediction.face.y,
+          prediction.face.width,
+          prediction.face.height
+        );
+      }
+    } else if (canvasRef.current) {
+      const ctx = canvasRef.current.getContext('2d');
+      if (ctx) {
+        ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+      }
+    }
+  }, [prediction]);
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-purple-100 to-indigo-200 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto">
+        <h1 className="text-4xl font-bold text-center text-indigo-900 mb-8">
+          Facial Expression Recognition
+        </h1>
+        <div className="flex flex-col md:flex-row gap-8">
+          <div className="w-full md:w-1/2 bg-white shadow-xl rounded-lg overflow-hidden">
+            <div className="relative">
+              <Webcam
+                audio={false}
+                ref={webcamRef}
+                screenshotFormat="image/jpeg"
+                width={640}
+                height={480}
+                videoConstraints={{ facingMode: 'user' }}
+                className="w-full h-auto transform scale-x-[-1]"
+              />
+              <canvas
+                ref={canvasRef}
+                width={640}
+                height={480}
+                className="absolute top-0 left-0 w-full h-full transform scale-x-[-1]"
+              />
+            </div>
+          </div>
+          <div className="w-full md:w-1/2 flex flex-col justify-center">
+            {error ? (
+              <Alert variant="destructive" className="mb-4">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Error</AlertTitle>
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            ) : prediction ? (
+              <Card className="bg-white shadow-xl">
+                <CardHeader>
+                  <CardTitle className="text-2xl font-bold text-indigo-900">Prediction Results</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="mb-4">
+                    <h3 className="text-lg font-semibold text-gray-700 mb-2">Detected Emotion:</h3>
+                    <Badge 
+                      variant="outline" 
+                      className={`text-lg py-1 px-3 ${emotionColors[prediction.emotion as keyof typeof emotionColors] || 'bg-gray-500'} text-white`}
+                    >
+                      {prediction.emotion}
+                    </Badge>
+                  </div>
+                  <div className="mb-4">
+                    <h3 className="text-lg font-semibold text-gray-700 mb-2">Confidence:</h3>
+                    <div className="flex items-center">
+                      <Progress value={prediction.confidence * 100} className="w-full" />
+                      <span className="ml-2 text-sm font-medium text-gray-700">
+                        {(prediction.confidence * 100).toFixed(2)}%
+                      </span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              <Card className="bg-white shadow-xl">
+                <CardContent className="p-6">
+                  <p className="text-lg text-gray-700">Waiting for prediction...</p>
+                </CardContent>
+              </Card>
+            )}
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      </div>
     </div>
   );
 }
