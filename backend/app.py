@@ -5,7 +5,6 @@ import tensorflow as tf
 from PIL import Image
 import cv2
 import io
-import os
 
 app = Flask(__name__)
 CORS(app)
