@@ -5,4 +5,3 @@ tensorflow
 Pillow
 opencv-python
 gunicorn
-io
