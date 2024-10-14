@@ -1,11 +1,11 @@
-'use client'
-import React, { useState, useRef, useCallback, useEffect } from 'react';
-import Webcam from 'react-webcam';
-import axios from 'axios';
+"use client";
+import React, { useState, useRef, useCallback, useEffect } from "react";
+import Webcam from "react-webcam";
+import axios from "axios";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface Prediction {
@@ -20,11 +20,11 @@ interface Prediction {
 }
 
 const emotionColors = {
-  Happy: 'bg-green-500',
-  Sad: 'bg-blue-500',
-  Neutral: 'bg-gray-500',
-  Angry: 'bg-red-500',
-  Surprised: 'bg-yellow-500',
+  Happy: "bg-green-500",
+  Sad: "bg-blue-500",
+  Neutral: "bg-gray-500",
+  Angry: "bg-red-500",
+  Surprised: "bg-yellow-500",
   // Add more colors for other emotions as needed
 };
 
@@ -35,36 +35,33 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
 
   const capture = useCallback(async () => {
-    const imageSrc = webcamRef.current?.getScreenshot();
-    if (imageSrc) {
-      const base64Data = imageSrc.split(',')[1];
-      const blob = await fetch(`data:image/jpeg;base64,${base64Data}`).then(res => res.blob());
-
-      const formData = new FormData();
-      formData.append('image', blob, 'webcam.jpg');
-
-      try {
-        const response = await axios.post('http://127.0.0.1:5000/predict', formData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
-        });
-        
-        if ('error' in response.data) {
-          setError(response.data.error);
-          setPrediction(null);
-        } else {
-          setPrediction(response.data);
-          setError(null);
+    try {
+      const imageSrc = webcamRef.current?.getScreenshot();
+      const response = await axios.post(
+        "/api/predict",
+        { imageSrc },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
         }
-      } catch (error) {
-        if (axios.isAxiosError(error)) {
-          console.error('Axios error:', error.message);
-          setError(`Network error: ${error.message}`);
-        } else {
-          console.error('Unexpected error:', error);
-          setError('An unexpected error occurred.');
-        }
+      );
+      if ("error" in response.data) {
+        setError(response.data.error);
         setPrediction(null);
+      } else {
+        setPrediction(response.data);
+        setError(null);
       }
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        console.error("Axios error:", error.message);
+        setError(`Network error: ${error.message}`);
+      } else {
+        console.error("Unexpected error:", error);
+        setError("An unexpected error occurred.");
+      }
+      setPrediction(null);
     }
   }, []);
 
@@ -77,10 +74,10 @@ export default function Home() {
 
   useEffect(() => {
     if (prediction && canvasRef.current && webcamRef.current) {
-      const ctx = canvasRef.current.getContext('2d');
+      const ctx = canvasRef.current.getContext("2d");
       if (ctx) {
         ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
-        ctx.strokeStyle = '#10B981';
+        ctx.strokeStyle = "#10B981";
         ctx.lineWidth = 2;
         ctx.strokeRect(
           prediction.face.x,
@@ -90,7 +87,7 @@ export default function Home() {
         );
       }
     } else if (canvasRef.current) {
-      const ctx = canvasRef.current.getContext('2d');
+      const ctx = canvasRef.current.getContext("2d");
       if (ctx) {
         ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
       }
@@ -112,7 +109,7 @@ export default function Home() {
                 screenshotFormat="image/jpeg"
                 width={640}
                 height={480}
-                videoConstraints={{ facingMode: 'user' }}
+                videoConstraints={{ facingMode: "user" }}
                 className="w-full h-auto transform scale-x-[-1]"
               />
               <canvas
@@ -133,22 +130,35 @@ export default function Home() {
             ) : prediction ? (
               <Card className="bg-white shadow-xl">
                 <CardHeader>
-                  <CardTitle className="text-2xl font-bold text-indigo-900">Prediction Results</CardTitle>
+                  <CardTitle className="text-2xl font-bold text-indigo-900">
+                    Prediction Results
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="mb-4">
-                    <h3 className="text-lg font-semibold text-gray-700 mb-2">Detected Emotion:</h3>
-                    <Badge 
-                      variant="outline" 
-                      className={`text-lg py-1 px-3 ${emotionColors[prediction.emotion as keyof typeof emotionColors] || 'bg-gray-500'} text-white`}
+                    <h3 className="text-lg font-semibold text-gray-700 mb-2">
+                      Detected Emotion:
+                    </h3>
+                    <Badge
+                      variant="outline"
+                      className={`text-lg py-1 px-3 ${
+                        emotionColors[
+                          prediction.emotion as keyof typeof emotionColors
+                        ] || "bg-gray-500"
+                      } text-white`}
                     >
                       {prediction.emotion}
                     </Badge>
                   </div>
                   <div className="mb-4">
-                    <h3 className="text-lg font-semibold text-gray-700 mb-2">Confidence:</h3>
+                    <h3 className="text-lg font-semibold text-gray-700 mb-2">
+                      Confidence:
+                    </h3>
                     <div className="flex items-center">
-                      <Progress value={prediction.confidence * 100} className="w-full" />
+                      <Progress
+                        value={prediction.confidence * 100}
+                        className="w-full"
+                      />
                       <span className="ml-2 text-sm font-medium text-gray-700">
                         {(prediction.confidence * 100).toFixed(2)}%
                       </span>
@@ -159,7 +169,9 @@ export default function Home() {
             ) : (
               <Card className="bg-white shadow-xl">
                 <CardContent className="p-6">
-                  <p className="text-lg text-gray-700">Waiting for prediction...</p>
+                  <p className="text-lg text-gray-700">
+                    Waiting for prediction...
+                  </p>
                 </CardContent>
               </Card>
             )}

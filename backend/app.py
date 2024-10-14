@@ -76,5 +76,4 @@ def predict():
     })
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))  # Default port is 5000, can be overridden by env
-    app.run(host='0.0.0.0', port=port)
+   app.run()
