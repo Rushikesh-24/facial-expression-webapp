@@ -22,12 +22,18 @@ class Cast(tf.keras.layers.Layer):
 with tf.keras.utils.custom_object_scope({'Cast': Cast}):
     # Load the trained model
     model = tf.keras.models.load_model('improved_emotion_model.h5')
+    # Compile the model with a dummy optimizer and loss to suppress the warning
+    model.compile(optimizer='adam', loss='sparse_categorical_crossentropy')
 
 # Load the face detection cascade
 face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
 
 # Define the emotion labels
 emotion_labels = ['Angry', 'Disgust', 'Fear', 'Happy', 'Sad', 'Surprise', 'Neutral']
+
+@app.route('/')
+def welcome():
+    return "Welcome to the server!"
 
 @app.route('/predict', methods=['POST'])
 def predict():
@@ -76,4 +82,4 @@ def predict():
 
 if __name__ == '__main__':
    app.run(port=5000, debug=True)
-   print("Server is running on port 5000")
+   print(f"Server is running on port {5000}")
