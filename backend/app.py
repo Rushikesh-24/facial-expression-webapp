@@ -5,6 +5,7 @@ import tensorflow as tf
 from PIL import Image
 import cv2
 import io
+import os
 
 app = Flask(__name__)
 CORS(app)
@@ -81,5 +82,6 @@ def predict():
     })
 
 if __name__ == '__main__':
-   app.run(port=5000, debug=True)
-   print(f"Server is running on port {5000}")
+    port = int(os.getenv('PORT', 10000))
+    app.run(host='0.0.0.0', port=port, debug=True)
+    print(f"Server is running on port {port}")
