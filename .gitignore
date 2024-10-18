@@ -38,5 +38,4 @@ next-env.d.ts
 
 /backend/env
 /backend/venv
-/backend/newmodel.py
 /public/archive
