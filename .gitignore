@@ -38,8 +38,5 @@ next-env.d.ts
 
 /backend/env
 /backend/venv
-/backend/v1model.h5
-/backend/model_weights.weights.h5
-/backend/test.py
 /backend/newmodel.py
 /public/archive
