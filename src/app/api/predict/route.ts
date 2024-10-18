@@ -23,7 +23,7 @@ export async function POST(request: Request) {
     formData.append('image', blob, 'webcam.jpg');
 
     const externalApiResponse = await axios.post(
-      'http://192.168.40.52:10000/predict',
+      'http://127.0.0.1:10000/predict',
       formData,
       {
         headers: { 'Content-Type': 'multipart/form-data' },

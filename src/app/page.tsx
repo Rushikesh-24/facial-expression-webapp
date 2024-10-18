@@ -35,6 +35,7 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
 
   const capture = useCallback(async () => {
+    console.log("hello")
     try {
       const imageSrc = webcamRef.current?.getScreenshot();
       const response = await axios.post(
@@ -68,7 +69,7 @@ export default function Home() {
   useEffect(() => {
     const interval = setInterval(() => {
       capture();
-    }, 1000);
+    }, 500);
     return () => clearInterval(interval);
   }, [capture]);
 
