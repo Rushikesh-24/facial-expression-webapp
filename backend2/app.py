@@ -5,9 +5,13 @@ import tensorflow as tf
 from PIL import Image
 import cv2
 import io
+import os
+port = int(os.environ.get('PORT', 4000))
 
 app = Flask(__name__)
 CORS(app)
+
+
 
 # Define the custom layer
 class Cast(tf.keras.layers.Layer):
@@ -75,4 +79,4 @@ def predict():
     })
 
 if __name__ == '__main__':
-   app.run( debug=True)
+   app.run(port, debug=True)
