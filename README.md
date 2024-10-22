@@ -1,3 +1,5 @@
+<img width="1470" alt="Demo" src="https://github.com/user-attachments/assets/7ae8e521-d747-474a-bbe3-f111b49f580d">
+
 # Emotion-Based Spotify Playlist Generator 🎶🎭
 
 ## Table of Contents
@@ -12,7 +14,9 @@
 - [How It Works](#how-it-works)
 - [Future Improvements](#future-improvements)
 - [Contributing](#contributing)
-- [License](#license)
+
+
+
 
 ## Overview
 
@@ -55,6 +59,8 @@ This project is a **mood-based playlist generator** that captures a user’s emo
     ```bash
     pip install -r requirements.txt
     ```
+    
+### Frontend
 
 3. Navigate to the frontend
 
